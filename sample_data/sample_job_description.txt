@@ -1,0 +1,46 @@
+We are hiring a Data Scientist / NLP Engineer to build and improve machine learning systems for text analytics and data-driven applications.
+
+Requirements:
+- Strong programming skills in Python and SQL
+- Experience with NLP pipelines, TF-IDF, BERT, and LSTM
+- Good understanding of classification, regression, and model evaluation
+- Experience with scikit-learn, pandas, NumPy, and TensorFlow/Keras
+- Ability to build and evaluate predictive models using structured and unstructured data
+- Experience with data visualization using Matplotlib and Seaborn
+- Familiarity with MySQL, Git, and Jupyter Notebook
+- Understanding of scalable data systems, APIs, and cloud-based workflows is a plus
+
+Preferred:
+- Experience with sentiment analysis or hate speech detection
+- Experience with dimensionality reduction and classification workflows
+- Strong communication and problem-solving skills
+
+===JOB===
+
+We are hiring a Data Analyst to build dashboards, analyze business metrics, and support reporting workflows.
+
+Requirements:
+- Strong SQL skills
+- Experience with Excel, Tableau, or Power BI
+- Data cleaning, reporting, and dashboarding experience
+- Ability to communicate insights clearly
+- Experience with KPIs and business metrics
+
+Preferred:
+- Experience with data storytelling
+- Familiarity with Power Query, DAX, or stakeholder communication
+
+===JOB===
+
+We are hiring a Machine Learning Engineer with strong model deployment and scalable pipeline experience.
+
+Requirements:
+- Strong Python and machine learning knowledge
+- Experience with scikit-learn, TensorFlow or PyTorch
+- Familiarity with APIs, cloud workflows, and scalable systems
+- Experience with model deployment and monitoring
+- Understanding of data pipelines and batch processing
+
+Preferred:
+- Experience with NLP systems
+- Familiarity with AWS and MLOps tools
