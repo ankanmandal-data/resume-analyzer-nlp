@@ -1,183 +1,182 @@
 # Resume Analyzer
 
-## Overview
+A structured NLP pipeline that scores how well a resume matches a job description. It combines sentence embeddings, keyword-based skill matching, and section-level experience alignment into a single weighted score, with a TF-IDF baseline for comparison and term-level explainability.
 
-A structured NLP resume analyzer that compares a resume PDF against one or multiple job descriptions. The system uses semantic similarity, required skill matching, preferred skill matching, experience/profile fit, explainability, recommendations, and batch ranking.
+Built with Sentence Transformers, scikit-learn, and Streamlit.
 
 ## Features
 
-- Upload a resume PDF
-- Compare against one or multiple job descriptions
-- Batch mode using `===JOB===`
-- Semantic similarity using Sentence Transformers
-- Required skills and preferred skills matching
-- Experience/profile fit scoring
-- Structured recruiter-aware final score
-- Recommendation block for resume improvement
+- PDF resume upload with automatic text extraction
+- Single and batch job description comparison (`===JOB===` separator)
+- Semantic similarity via pretrained Sentence Transformers (`all-MiniLM-L6-v2`)
+- TF-IDF keyword baseline with semantic lift metric
+- Separate required vs preferred skill matching (65+ skills across DS, DA, BI, DE roles)
+- Section-level experience/profile fit scoring
+- Best-effort years of experience detection from resume text
+- Weighted final score with recruiter-style label: 🟢 Strong / 🟡 Moderate / 🔴 Weak
+- Score breakdown expander showing per-component contributions
+- TF-IDF term explainability with contextual commentary
+- Actionable improvement suggestions
 - Downloadable JSON report
-- Explainability through top matching TF-IDF terms
-- Streamlit-based interactive UI
-- Lightweight evaluation script
-- Recruiter-style match labeling: Strong / Moderate / Weak
-- Expanded Data Analyst skill coverage including SQL, BI tools, Excel, KPIs, ETL, and reporting
+
+## App Screenshot
+
+![App Output](assets/app_output.png)
 
 ## Tech Stack
 
-- Python
+- Python 3.9+
 - Streamlit
 - Sentence Transformers
 - scikit-learn
-- PyMuPDF
-- NumPy
-- Pandas
+- PyMuPDF (fitz)
+- NumPy / Pandas
 
 ## Project Structure
 
-```bash
+```
 resume-analyzer/
-│
-├── analyzer.py
-├── app.py
-├── evaluation.py
-├── evaluation_results.csv
-├── README.md
+├── analyzer.py                       # Core NLP pipeline
+├── app.py                            # Streamlit UI
+├── evaluation.py                     # Evaluation script
+├── evaluation_results.csv            # Output from evaluation run
+├── evaluation_confusion_matrix.csv   # Confusion matrix output
 ├── requirements.txt
-│
+├── README.md
 ├── assets/
+│   ├── System_Architecture.png
+│   ├── Scoring_System.png
+│   ├── Explainability_Flow.png
 │   └── app_output.png
-│
 ├── sample_data/
 │   ├── sample_resume.pdf
 │   └── sample_job_description.txt
-│
 └── notebooks/
-    └── prototype.ipynb
- ```   
+    └── prototype.ipynb               # Early exploration (reference only)
+```
 
-## Problem Statement
+## How It Works
 
-Recruiters and applicants often need to compare resumes against job descriptions, but manual matching can be slow and inconsistent. Basic keyword-based systems may miss strong candidates when the wording differs between the resume and job description.
-This project builds a structured NLP-based resume analyzer that evaluates a resume using semantic similarity, required skills, preferred skills, and experience/profile fit.
-
-## Approach
-
-The system works in the following stages:
-
-1. Extract text from the uploaded resume PDF
-2. Clean and normalize resume and job description text
-3. Split the job description into required and preferred requirement sections
-4. Extract skills using an alias-based rule matching system
-5. Compute semantic similarity between the resume and job description using a pretrained Sentence Transformer model
-6. Compute required skill match and preferred skill match separately
-7. Estimate experience/profile fit using section-level signals
-8. Combine all scores into a structured recruiter-aware final score
-9. Generate recommendations based on missing skills and weaker alignment areas
-10. Display matched skills, missing skills, top matching terms, and downloadable JSON reports
+1. Extract raw text from the resume PDF using PyMuPDF
+2. Normalize and clean both resume and job description text
+3. Split the JD into required and preferred sections using keyword detection
+4. Extract skills from both documents using an alias-based regex dictionary
+5. Compute global semantic similarity using Sentence Transformer embeddings
+6. Compute a TF-IDF keyword baseline and the semantic lift over it
+7. Score required and preferred skill match separately
+8. Estimate experience/profile fit using section-level cosine similarity
+9. Attempt to extract years of experience using regex patterns
+10. Combine all components into a weighted final score
+11. Surface matched/missing skills, top TF-IDF terms, and suggestions
 
 ## System Architecture
 
 ![System Architecture](assets/System_Architecture.png)
 
-## Scoring Logic
+## Scoring
 
-The final score is a structured combination of multiple factors:
+Final score is a weighted combination of four components:
 
-- Semantic Similarity
-- Required Skill Match
-- Preferred Skill Match
-- Experience/Profile Fit
+| Component | Weight |
+|---|---|
+| Semantic Similarity | 40% |
+| Required Skill Match | 30% |
+| Preferred Skill Match | 15% |
+| Experience / Profile Fit | 15% |
 
-Default weighting:
+```
+Final Score = 0.40 × Semantic + 0.30 × Required + 0.15 × Preferred + 0.15 × Experience
+```
 
-- Semantic similarity: 40%
-- Required skill match: 30%
-- Preferred skill match: 15%
-- Experience/profile fit: 15%
-
-All scores are normalized between 0 and 1.
+All scores are normalized between 0 and 1. The weights are reasonable defaults based on
+what matters most in typical screening, but they can be adjusted for different use cases.
 
 ![Scoring System](assets/Scoring_System.png)
 
 ## Explainability
 
-To make the output more interpretable, the app also shows:
-- Matched skills
-- Missing skills
-- Top matching TF-IDF terms between resume and job description
-This helps explain why a resume received a certain score instead of producing only a black-box output.
+Several signals help interpret the score:
+
+- **TF-IDF baseline** — keyword overlap between resume and JD
+- **Semantic similarity** — contextual similarity via Sentence Transformers
+- **Semantic lift** — difference between the two; a positive lift suggests the
+  embedding model is detecting relevant context that keyword matching alone would miss
+- **Top matching terms** — the specific n-grams with the highest TF-IDF weight in both documents
+
+This is intended to make the scoring more transparent and interpretable, not to imply
+causal attribution — the final score is a heuristic, not a ground-truth ranking.
 
 ![Explainability Flow](assets/Explainability_Flow.png)
 
 ## Batch Mode
 
-The app supports comparing one resume against multiple job descriptions.
-To use batch mode, paste multiple job descriptions into the input box and separate them using:
-
-```text
-===JOB===
-```
-The app will rank the jobs and identify the best match.
+Separate multiple job descriptions with `===JOB===` to compare one resume against
+several openings at once. The app ranks them by score and shows a side-by-side table.
 
 ## Evaluation
 
-A lightweight evaluation script (`evaluation.py`) is included to benchmark the system on manually labeled High / Medium / Low match cases.
-
-The expanded evaluation set includes:
-- Strong Data Analyst / Data Science matches
-- Moderate partial-match cases
-- Weak mismatched-role cases such as frontend, marketing, and HR examples
-
-The system is evaluated using:
-
-- Accuracy
-- Precision
-- Recall
-- F1-score
-
-The script generates a classification report comparing predicted vs expected match levels.
-
-Results are saved to `evaluation_results.csv`.
-
-## How to Run
-
-- Requires Python 3.9+
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the Streamlit app:
-
-```bash
-streamlit run app.py
-```
-
-Run evaluation:
+`evaluation.py` runs 12 labeled test cases and outputs accuracy, a classification report,
+and a confusion matrix. Cases cover Data Science, Data Analyst, BI Analyst, Data Engineering,
+and clearly mismatched roles (marketing, frontend, HR).
 
 ```bash
 python evaluation.py
 ```
 
-You can test the app using the files inside the `sample_data/` folder:
+**Results on the 12-case test set:**
 
-- `sample_resume.pdf`
-- `sample_job_description.txt`
+| Class | Precision | Recall | F1 |
+|---|---|---|---|
+| Low | 1.00 | 1.00 | 1.00 |
+| Medium | 1.00 | 1.00 | 1.00 |
+| High | 1.00 | 1.00 | 1.00 |
 
-## Example Output
+Overall accuracy: **12/12 on this test set**
 
-Below is a sample app result:
-![App Output](assets/app_output.png)
+These results should be interpreted with caution — the test set is small (12 cases)
+and uses simplified skill-list resumes rather than real PDFs. Performance on real-world
+resumes will likely show more variance. The evaluation is primarily useful for
+verifying that the scoring logic behaves consistently across match levels.
 
-## Future Improvements
+Thresholds: High ≥ 0.75 · Medium ≥ 0.45 · Low < 0.45
 
-- Extend the system to rank multiple resumes against a single job description
-- Improve skill synonym coverage further
-- Add section-aware resume parsing (experience, education)
-- Improve experience modeling (years, progression)
-- Add LLM-based explanation layer
-- Improve handling for noisy PDF parsing cases
+## How to Run
+
+**Requirements:** Python 3.9+
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Sample files in `sample_data/` can be used to test the app immediately without
+needing to provide your own resume.
+
+To regenerate evaluation output:
+
+```bash
+python evaluation.py
+```
+
+## Limitations
+
+- **Small evaluation set:** 12 test cases using simplified text, not real resumes.
+  Results on real PDFs will vary, especially for complex or non-standard layouts.
+- **PDF parsing:** Multi-column or scanned resumes may not extract cleanly.
+- **Skill dictionary:** Manually maintained — new or niche tools need to be added manually.
+- **JD section splitting:** Relies on keyword detection; non-standard JD formats may
+  not split correctly into required/preferred sections.
+- **Experience fit:** Section-level semantic similarity is a rough proxy —
+  it doesn't model actual years of experience or role progression.
+- **Years detection:** Regex-based heuristic; may over- or under-count in some cases.
+
+## Future Work
+
+- Reverse mode: rank multiple resumes against a single job description
+- Structured experience parsing (years per role, company names, progression)
+- LLM-based natural language explanation layer
+- Domain-specific skill vocabulary extensions (Finance, Healthcare, etc.)
+- Larger and more diverse evaluation set with real anonymized resumes
 
 ## Author
 
